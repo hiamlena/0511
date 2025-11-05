@@ -24,12 +24,14 @@
         <div class="small right">Альтернативы доступны — выберите в списке</div>
 
         <div class="field">
-          <span>Откуда</span>
-          <input id="from" type="text" placeholder="Адрес, населённый пункт">
+          <label class="field-label" for="from">Откуда</label>
+          <input id="from" type="text" placeholder="Адрес, населённый пункт" autocomplete="off" spellcheck="false">
+          <div class="suggestions" data-for="from" role="listbox" aria-label="Подсказки адреса"></div>
         </div>
         <div class="field">
-          <span>Куда</span>
-          <input id="to" type="text" placeholder="Адрес, населённый пункт">
+          <label class="field-label" for="to">Куда</label>
+          <input id="to" type="text" placeholder="Адрес, населённый пункт" autocomplete="off" spellcheck="false">
+          <div class="suggestions" data-for="to" role="listbox" aria-label="Подсказки адреса"></div>
         </div>
 
         <div class="row2">
@@ -57,7 +59,10 @@
         <div class="dot dot-alt"></div><span class="small">Альтернативы</span>
         <div class="dot dot-frames"></div><span class="small">Весовые рамки</span>
       </div>
-      <div id="routeList" class="routeList"></div>
+      <div id="routeList" class="routeList" aria-live="polite">
+        <div class="routeList-title">Варианты маршрута</div>
+        <div id="routeItems" class="routeItems"></div>
+      </div>
     </div>
   </div>
 
