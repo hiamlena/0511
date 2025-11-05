@@ -1,0 +1,24 @@
+{
+  "name": "Trans-Time — Маршрут для грузовиков",
+  "short_name": "TransTime",
+  "description": "Маршруты с учётом весовых рамок",
+  "start_url": "/map/index.html",
+  "display": "standalone",
+  "background_color": "#0f1115",
+  "theme_color": "#e11d2e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='80' fill='%23e11d2e'%3E🚛%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ctext y='0.85em' font-size='400' fill='%23e11d2e'%3E🚛%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

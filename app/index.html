@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TransTime — Панель администратора</title>
+<link rel="icon" href="/assets/logo-tt.png" />
+<style>
+:root {
+  --bg:#0b0b0d; --fg:#ececec; --muted:#9aa0b3;
+  --accent:#4da3ff; --btn:#1b1b1d; --hover:#2a2a2e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,Inter,Roboto,Arial;}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;}
+header{position:absolute;top:30px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;}
+header img{width:50px;filter:invert(1)}
+header h1{font-size:20px;font-weight:700;letter-spacing:.5px;}
+.main{
+  display:flex;flex-direction:column;align-items:center;gap:20px;
+  padding:40px 20px;border-radius:14px;
+  background:rgba(20,20,28,.65);
+  box-shadow:0 8px 28px rgba(0,0,0,.6);
+}
+.btn{
+  display:block; width:250px; padding:12px 0; border-radius:10px;
+  background:var(--btn); color:var(--fg); text-decoration:none; font-weight:600;
+  border:1px solid #2a2a2e; transition:.2s;
+}
+.btn:hover{background:var(--hover);color:#fff;border-color:var(--accent);}
+footer{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);color:var(--muted);font-size:13px;}
+@media(max-width:560px){.btn{width:200px;}}
+</style>
+</head>
+<body>
+<header>
+  <img src="/assets/logo-tt.png" alt="TT">
+  <h1>TransTime — Панель администратора</h1>
+</header>
+
+<div class="main">
+  <a href="/map/" class="btn">Карта перевозок</a>
+  <a href="/calc/" class="btn">Калькулятор наливных грузов</a>
+  <a href="#" class="btn" style="opacity:.6;cursor:not-allowed;">Журнал / аналитика</a>
+  <a href="/" id="logout" class="btn" style="background:#4da3ff;color:#000;font-weight:700;">Выйти</a>
+</div>
+
+<footer>© TransTime. Внутренняя административная платформа</footer>
+
+<script>
+(() => {
+  const user = localStorage.getItem('user');
+  if (user !== 'admin') location.href = '/';
+  document.getElementById('logout').addEventListener('click',()=>{
+    localStorage.removeItem('user');
+  });
+})();
+</script>
+</body>
+</html>

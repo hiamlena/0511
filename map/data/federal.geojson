@@ -1,0 +1,15 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[37.6, 55.7], [38.0, 55.8]]
+      },
+      "properties": {
+        "name": "Трасса М1 (пример)"
+      }
+    }
+  ]
+}

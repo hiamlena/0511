@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>TT Diag</title>
+<style>
+  body{font:14px/1.4 system-ui,Segoe UI,Roboto,Arial;padding:16px;background:#0b1020;color:#e5e7eb}
+  .ok{color:#22c55e}.warn{color:#f59e0b}.err{color:#ef4444}.muted{opacity:.7}
+  pre{white-space:pre-wrap;word-break:break-word;background:#0f172a;border:1px solid #1f2a44;padding:10px;border-radius:8px}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .card{border:1px solid #1f2a44;padding:12px;border-radius:10px;background:#0f172a;min-width:260px}
+</style>
+</head>
+<body>
+<h2>Trans-Time — Диагностика</h2>
+
+<div class="row">
+  <div class="card"><b>Док. заголовки (CSP)</b><pre id="hdrs">читаю…</pre></div>
+  <div class="card"><b>Сеть</b><pre id="net">проверяю…</pre></div>
+  <div class="card"><b>Yandex API</b><pre id="ya">жду…</pre></div>
+  <div class="card"><b>JS-ошибки</b><pre id="js">пока нет</pre></div>
+</div>
+
+<script>
+(function(){
+  const $ = sel => document.querySelector(sel);
+  const log = (id, msg, cls='')=>{
+    const el = $(id);
+    el.innerHTML += (el.textContent.trim()?'\n':'') + msg;
+    if(cls) el.className = cls;
+  };
+
+  // 1) Собираем заголовки откликом на HEAD
+  fetch(location.href, {method:'HEAD', cache:'no-store'}).then(r=>{
+    const csp = r.headers.get('content-security-policy') || '(нет CSP в заголовке)';
+    const ro = r.headers.get('content-security-policy-report-only');
+    const lines = [`CSP: ${csp}`];
+    if (ro) lines.push(`CSP-Report-Only: ${ro}`);
+    $('#hdrs').textContent = lines.join('\n');
+  }).catch(e=>$('#hdrs').textContent = 'Ошибка чтения заголовков: '+e);
+
+  // 2) Пингуем критичные домены — поймём, что блочит CSP
+  async function ping(url){
+    try{
+      const r = await fetch(url, {mode:'no-cors', cache:'no-store'});
+      return {url, ok:true};
+    }catch(e){return {url, ok:false, err:String(e)}}
+  }
+  (async ()=>{
+    const targets = [
+      'https://api-maps.yandex.ru/2.1/?lang=ru_RU',
+      'https://yastatic.net',
+      'https://core-renderer-tiles.maps.yandex.net',
+      'https://geocode-maps.yandex.ru',
+      'https://router-maps.yandex.ru',
+      // тест курсора (часто блочится img-src)
+      'https://yastatic.net/s3/front-maps-static/maps-front-jsapi-v2-1/2.1.79-17809409/out/release/images/cursor/grab.cur'
+    ];
+    const results = await Promise.all(targets.map(ping));
+    $('#net').textContent = results.map(r => `${r.ok?'✅':'⛔'} ${r.url}`).join('\n');
+  })();
+
+  // 3) Ловим ошибки JS и CSP-violations
+  const jsbox = $('#js');
+  window.addEventListener('error', e=>{
+    jsbox.textContent += `\n❌ ${e.message} @ ${e.filename}:${e.lineno}`;
+  });
+  window.addEventListener('unhandledrejection', e=>{
+    jsbox.textContent += `\n⚠️ Unhandled: ${(e.reason && (e.reason.stack||e.reason.message)) || e.reason}`;
+  });
+  document.addEventListener('securitypolicyviolation', e=>{
+    jsbox.textContent += `\n🛡️ CSP block: ${e.violatedDirective} → ${e.blockedURI}`;
+  });
+
+  // 4) Проверяем загрузку Yandex API (без ключа, просто доступность)
+  const s = document.createElement('script');
+  s.src = 'https://api-maps.yandex.ru/2.1/?lang=ru_RU';
+  s.onload = ()=>{ $('#ya').textContent = '✅ Yandex API доступен (без ключа)'; };
+  s.onerror = ()=>{ $('#ya').textContent = '⛔ Не загрузился Yandex API (см. CSP/сеть)'; };
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>

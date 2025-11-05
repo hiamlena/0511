@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>Trans-Time — Маршрут для грузовиков</title>
+
+  <!-- Путь к реально существующему CSS -->
+  <link rel="stylesheet" href="./assets/css/style.css?v=1.0.2"/>
+  <link rel="manifest" href="manifest.json"/>
+<!-- Favicon и иконки для вкладки -->
+<link rel="icon" type="image/png" href="/assets/logo-tt.png">
+<link rel="shortcut icon" href="/assets/logo-tt.png">
+<link rel="apple-touch-icon" href="/assets/logo-tt.png">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="bar">
+        <div class="brand">Trans-Time • Маршрут для грузовиков</div>
+        <div class="small">Клик по карте → добавить via-точку</div>
+        <div></div>
+        <!-- было style="text-align:right" -->
+        <div class="small right">Альтернативы доступны — выберите в списке</div>
+
+        <div class="field">
+          <span>Откуда</span>
+          <input id="from" type="text" placeholder="Адрес, населённый пункт">
+        </div>
+        <div class="field">
+          <span>Куда</span>
+          <input id="to" type="text" placeholder="Адрес, населённый пункт">
+        </div>
+
+        <div class="row2">
+          <!-- было style="display:flex;gap:8px;flex-wrap:wrap" -->
+          <div id="vehicleGroup" class="veh-group">
+            <label class="pill active"><input type="radio" name="veh" value="car" checked><span>Легковой</span></label>
+            <label class="pill"><input type="radio" name="veh" value="truck40"><span>Грузовой ≤ 40 т</span></label>
+            <label class="pill"><input type="radio" name="veh" value="truckHeavy"><span>Грузовой > 40 т</span></label>
+          </div>
+          <!-- было style="display:flex;gap:8px;margin-left:auto" -->
+          <div class="actions">
+            <button id="buildBtn" class="btn">Построить маршрут</button>
+            <button id="clearVia" class="btn secondary">Сбросить via-точки</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- было style="position:relative" -->
+    <div class="mapWrap">
+      <div id="map"></div>
+      <div class="legend">
+        <!-- были inline background -->
+        <div class="dot dot-route"></div><span class="small">Маршрут</span>
+        <div class="dot dot-alt"></div><span class="small">Альтернативы</span>
+        <div class="dot dot-frames"></div><span class="small">Весовые рамки</span>
+      </div>
+      <div id="routeList" class="routeList"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- Конфиг (как было) -->
+<script src="config.js?v=1.0.1"></script>
+
+  <!-- Внешние обработчики ошибок/промисов/CSP -->
+  <script type="module" src="./errors.js?v=1.0.0"></script>
+
+  <!-- Точка входа. Если app.js у тебя в /map/assets/js/, оставь строку ниже.
+       Если он лежит в /map/, замени на ./app.js?v=1.0.2 -->
+  <script type="module" src="./assets/js/app.js?v=1.0.2"></script>
+</body>
+</html>

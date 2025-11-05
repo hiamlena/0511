@@ -1,0 +1,15 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[37.5, 55.6], [37.8, 55.7]]
+      },
+      "properties": {
+        "hgv:conditional": "no @ (22:00-06:00)"
+      }
+    }
+  ]
+}

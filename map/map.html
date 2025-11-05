@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trans-Time — Маршрут (Leaflet)</title>
+
+  <!-- Leaflet CSS (CDN) -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <!-- Наши стили (внешний файл, без inline) -->
+  <link rel="stylesheet" href="./assets/css/map-leaflet.css?v=1.0.0" />
+</head>
+<body>
+  <!-- Боковая панель -->
+  <div id="sidebar" class="sidebar">
+    <h3>Trans-Time • Маршрут (без Яндекс)</h3>
+    <p>Клик по карте ➜ добавить via-точку</p>
+    <p>Альтернативы доступны — выбери в списке</p>
+
+    <label for="from">Откуда:</label>
+    <input type="text" id="from" placeholder="Адрес отправления" />
+
+    <label for="to">Куда:</label>
+    <input type="text" id="to" placeholder="Адрес назначения" />
+
+    <button id="buildBtn" class="btn">Построить маршрут</button>
+
+    <div class="route-option">
+      <label><input type="radio" id="active" name="route" checked /> Маршрут (активный)</label>
+      <label><input type="radio" id="alt" name="route" /> Альтернативы</label>
+      <label><input type="radio" id="weights" name="route" /> Весовые рамки</label>
+    </div>
+  </div>
+
+  <!-- Контейнер карты -->
+  <div id="map" class="map"></div>
+
+  <!-- Leaflet JS (CDN) -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <!-- Наш JS (внешний файл, без inline) -->
+  <script type="module" src="./assets/js/map-leaflet.js?v=1.0.0"></script>
+</body>
+</html>

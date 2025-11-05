@@ -1,0 +1,308 @@
+/* === ФОН: графитовый, нейтральный, с глубиной === */
+/* Делаем внутренний документ прозрачным под внешний фон */
+html, body { background: transparent !important; }
+
+/* Небольшой “шум” и эффект глубины */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,\
+  <svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'>\
+  <filter id='noise'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter>\
+  <rect width='200' height='200' filter='url(#noise)' opacity='0.05'/></svg>");
+  background-size: cover;
+  mix-blend-mode: overlay;
+  opacity: .4;
+}
+:root{
+  /* спокойная графитовая тема */
+  --bg1:#1b202b; --bg2:#222733;
+  --card:rgba(36,42,54,.62);
+  --line:rgba(255,255,255,.10);
+  --fg:#eef1f6; --muted:#c3cad7;
+
+  /* кнопки: графит по умолчанию, акцент мягко-зелёный */
+  --btn:#2d3342; --btnHover:#343b4f;
+  --accent:#36d399; --accent2:#16a34a;
+}
+
+/* прячем чужой заголовок */
+.title{ display:none !important; }
+
+/* карточки/панели */
+.card,.panel,.box,.wrap,.section{
+  background:var(--card) !important;
+  border:1px solid var(--line) !important;
+  border-radius:14px !important;
+  box-shadow:0 10px 28px rgba(0,0,0,.32) !important;
+  backdrop-filter:saturate(140%) blur(6px);
+  -webkit-backdrop-filter:saturate(140%) blur(6px);
+}
+
+/* заголовки */
+h1,h2,h3{ color:#fff; font-weight:700; letter-spacing:.2px }
+h1{ font-size:20px } h2{ font-size:18px } h3{ font-size:16px }
+
+/* формы */
+label{ color:var(--muted) !important; font-size:12px !important; margin:4px 0 !important; }
+input,textarea{
+  background:rgba(255,255,255,.08) !important;
+  border:1px solid rgba(255,255,255,.18) !important;
+  color:#fff !important; border-radius:10px !important; padding:8px 10px !important;
+}
+input::placeholder,textarea::placeholder{ color:#dae2f2 !important; }
+input:focus,textarea:focus{
+  background:rgba(255,255,255,.12) !important;
+  border-color:var(--accent) !important;
+  box-shadow:0 0 0 2px rgba(54,211,153,.25) !important;
+}
+
+/* селекты – тёмные, со своей стрелкой; сам список — тёмный в Chromium/Firefox */
+select{
+  -webkit-appearance:none; -moz-appearance:none; appearance:none;
+  background:rgba(255,255,255,.08) right 12px center/12px no-repeat !important;
+  border:1px solid rgba(255,255,255,.18) !important;
+  color:#fff !important; border-radius:10px !important;
+  padding:8px 36px 8px 10px !important;
+  background-image:url("data:image/svg+xml;utf8,\
+  <svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>\
+  <polyline points='6 9 12 15 18 9'/></svg>");
+}
+select:focus{
+  background-color:rgba(255,255,255,.12) !important;
+  border-color:var(--accent) !important;
+  box-shadow:0 0 0 2px rgba(54,211,153,.25) !important;
+}
+select::-ms-expand{ display:none; }          /* старый IE */
+select option{ background:#2a2f3b; color:#eef1f6; } /* Chromium/Firefox */
+
+/* Кнопки — графитовые, контрастные */
+.btn,
+button,
+input[type=button],
+input[type=submit] {
+  background: var(--btn) !important;
+  color: var(--fg) !important; /* текст теперь серо-белый, не чисто белый */
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  padding: 9px 14px !important;
+  transition: background 0.2s ease, transform 0.05s ease, color 0.2s ease;
+}
+
+/* hover / focus — лёгкое свечение */
+.btn:hover,
+button:hover {
+  background: var(--btnHover) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.btn:active,
+button:active {
+  transform: translateY(1px);
+}
+
+/* Primary (например «Сохранить», «Рассчитать») — зелёные */
+.btn.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2)) !important;
+  border: none !important;
+  color: #fff !important;
+}
+.btn.primary:hover {
+  filter: brightness(1.08) !important;
+}
+.btn, button {
+  box-shadow: 0 2px 5px rgba(0,0,0,.25);
+}
+.btn:hover, button:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,.35);
+}
+/* ===== КНОПКИ: жёсткий оверрайд ===== */
+html body .btn:not(.primary),
+html body button:not(.primary),
+html body input[type="button"]:not(.primary),
+html body input[type="submit"]:not(.primary),
+html body #addTrailer,
+html body #btnAddProduct {
+  background: #2d3342 !important;          /* тёмно-графитовый */
+  color: #e9ecf3 !important;               /* светлый текст */
+  border: 1px solid rgba(255,255,255,.15) !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  padding: 9px 14px !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,.25) !important;
+}
+
+html body .btn:not(.primary):hover,
+html body button:not(.primary):hover,
+html body input[type="button"]:not(.primary):hover,
+html body input[type="submit"]:not(.primary):hover,
+html body #addTrailer:hover,
+html body #btnAddProduct:hover {
+  background: #343b4f !important;
+  color: #ffffff !important;
+  border-color: rgba(255,255,255,.25) !important;
+  box-shadow: 0 4px 8px rgba(0,0,0,.35) !important;
+}
+
+/* Primary оставляем зелёными */
+html body .btn.primary,
+html body button.primary {
+  background: linear-gradient(135deg, var(--accent, #36d399), var(--accent2, #16a34a)) !important;
+  color:#fff !important;
+  border: none !important;
+}
+/* ===== MODALS: Добавить прицеп / Добавить груз ===== */
+html body #modal .sheet,
+html body #modalProduct .sheet{
+  background: rgba(34,39,49,.90) !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  color: #E8ECF3 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 14px 40px rgba(0,0,0,.45) !important;
+}
+
+/* Заголовки в модалках */
+html body #modal .sheet h3,
+html body #modalProduct .sheet h3{
+  color: #fff !important;
+}
+
+/* Подписи */
+html body #modal label,
+html body #modalProduct label{
+  color: #AEB6C6 !important;
+  font-size: 12px !important;
+  margin: 4px 0 !important;
+}
+
+/* Поля ввода (input/textarea) */
+html body #modal input,
+html body #modalProduct input,
+html body #modal textarea,
+html body #modalProduct textarea{
+  background: rgba(255,255,255,.08) !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  padding: 8px 10px !important;
+}
+html body #modal input::placeholder,
+html body #modalProduct input::placeholder,
+html body #modal textarea::placeholder,
+html body #modalProduct textarea::placeholder{
+  color: #CFD6E6 !important;
+}
+html body #modal input:focus,
+html body #modalProduct input:focus,
+html body #modal textarea:focus,
+html body #modalProduct textarea:focus{
+  border-color: #3D82F6 !important;
+  box-shadow: 0 0 0 2px rgba(61,130,246,.25) !important;
+}
+
+/* SELECT — тёмный + своя стрелка */
+html body #modal select,
+html body #modalProduct select{
+  -webkit-appearance:none; -moz-appearance:none; appearance:none;
+  background:
+    rgba(255,255,255,.08)
+    right 12px center/12px no-repeat !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  padding: 8px 36px 8px 10px !important;
+  /* стрелка */
+  background-image: url("data:image/svg+xml;utf8,\
+    <svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>\
+    <polyline points='6 9 12 15 18 9'/></svg>");
+}
+html body #modal select:focus,
+html body #modalProduct select:focus{
+  background-color: rgba(255,255,255,.12) !important;
+  border-color: #3D82F6 !important;
+  box-shadow: 0 0 0 2px rgba(61,130,246,.25) !important;
+}
+
+/* Список опций (Chromium/Firefox/Edge поддерживают) */
+html body #modal option,
+html body #modalProduct option{
+  background: #2B313D !important;
+  color: #E9EDF6 !important;
+}
+html body #modal select::-ms-expand,
+html body #modalProduct select::-ms-expand{ display:none; }
+
+/* КНОПКИ в модалках: Сохранить/Отмена */
+html body #modal .btn,
+html body #modalProduct .btn,
+html body #modal button,
+html body #modalProduct button,
+html body #m_save, html body #m_cancel,
+html body #mp_save, html body #mp_cancel{
+  background: #2d3342 !important;
+  color: #E9ECF3 !important;
+  border: 1px solid rgba(255,255,255,.15) !important;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+  padding: 9px 14px !important;
+}
+html body #modal .btn.primary,
+html body #modalProduct .btn.primary,
+html body #m_save, html body #mp_save{
+  background: linear-gradient(135deg, #36d399, #16a34a) !important;
+  border: none !important;
+  color: #fff !important;
+}
+html body #modal .btn:hover,
+html body #modalProduct .btn:hover,
+html body #modal button:hover,
+html body #modalProduct button:hover,
+html body #m_cancel:hover, html body #mp_cancel:hover{
+  background: #343b4f !important;
+  color: #fff !important;
+}
+
+/* Чуть плотнее сетка внутри модалок */
+html body #modal .row,
+html body #modalProduct .row{ gap: 10px !important; }
+/* === ФИКС "чёрных цифр" внутри iframe === */
+
+/* 1) Весь текст по умолчанию светлый */
+html body, html body * {
+  color: #eef1f6 !important;
+}
+
+/* 2) Форм-контролы — гарантированно светлые, включая Chrome autofill */
+html body input,
+html body select,
+html body textarea {
+  color: #eef1f6 !important;
+  -webkit-text-fill-color: #eef1f6 !important; /* WebKit */
+}
+html body input:-webkit-autofill {
+  -webkit-text-fill-color: #eef1f6 !important;
+  box-shadow: 0 0 0 1000px rgba(255,255,255,.08) inset !important;
+}
+
+/* 3) Таблицы и KPI — цифры и подписи светлые */
+html body table,
+html body th,
+html body td,
+html body .kpi .v,
+html body .kpi .t {
+  color: #eef1f6 !important;
+}
+
+/* 4) На случай жёстких инлайновых стилей с #000 */
+html body [style*="color:#000"],
+html body [style*="color: #000"],
+html body [style*="color:#111"],
+html body [style*="color: #111"] {
+  color: #eef1f6 !important;
+}
+

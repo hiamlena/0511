@@ -1,0 +1,211 @@
+:root {
+  --bg: #0f1115;
+  --panel: #151822;
+  --muted: #8892a6;
+  --text: #e6eaf2;
+  --accent: #e11d2e;
+  --stroke: #232836;
+  --btn: #1b2030;
+  --btn-h: #232a3d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial;
+}
+
+#app {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;            /* контейнер растянут на экран */
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: linear-gradient(180deg, var(--panel), rgba(21, 24, 34, .8));
+  border-bottom: 1px solid var(--stroke);
+  backdrop-filter: blur(6px);
+}
+
+.bar {
+  max-width: 1200px;
+  margin: 8px auto;
+  padding: 8px 12px;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 1fr minmax(120px, auto) auto;
+}
+
+.row2 {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  grid-column: 1/-1;
+}
+
+.brand {
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+
+.field {
+  background: var(--btn);
+  border: 1px solid var(--stroke);
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--text);
+  font: 14px/1.2 inherit;
+}
+
+.pill {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  border: 1px solid var(--stroke);
+  background: var(--btn);
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pill input {
+  display: none;
+}
+
+.pill.active {
+  background: var(--btn-h);
+  border-color: var(--accent);
+}
+
+.btn {
+  background: var(--accent);
+  border: 0;
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btn.secondary {
+  background: var(--btn);
+  color: var(--text);
+  border: 1px solid var(--stroke);
+}
+
+.small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.mapWrap {                      /* родителю даём реальную высоту */
+  position: relative;
+  min-height: 0;                /* чтобы 1fr работал как надо */
+}
+#map {
+  height: 100%;                 /* теперь 100% есть от чего считать */
+  width: 100%;
+  min-height: 420px;            /* запас, чтобы карта всегда была видна */
+}
+.legend {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 4;
+  background: rgba(21, 24, 34, .9);
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.legend .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.routeList {
+  position: absolute;
+  right: 12px;
+  top: 90px;
+  z-index: 4;
+  min-width: 220px;
+  max-width: 300px;
+  background: rgba(21, 24, 34, .95);
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  padding: 8px;
+  display: none;
+}
+
+.routeItem {
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.routeItem:hover {
+  background: var(--btn);
+}
+
+.routeItem.active {
+  border-color: var(--accent);
+  background: var(--btn-h);
+}
+
+.toast {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 10;
+  background: rgba(21, 24, 34, .95);
+  border: 1px solid var(--stroke);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .35);
+  padding: 10px 14px;
+  border-radius: 12px;
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .bar {
+    grid-template-columns: 1fr;
+  }
+  .routeList {
+    top: auto;
+    bottom: 90px;
+    right: 12px;
+  }
+}
+
+/* === CSP-safe замены для inline style === */
+.right { text-align: right; }
+.veh-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.actions { display: flex; gap: 8px; margin-left: auto; }
+/* .mapWrap { position: relative; } ← ЭТО УДАЛЯЕМ */
+.dot-route  { background: #22c55e; }
+.dot-alt    { background: #f59e0b; }
+.dot-frames { background: #60a5fa; }

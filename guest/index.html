@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TransTime — DEMO</title>
+<link rel="icon" href="/assets/logo-tt.png">
+<style>
+  :root{ --bg:#0f1013; --card:#14161b; --line:#262a35; --fg:#e9eaef; --muted:#9aa0ae; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--fg);font:14px system-ui,Inter,Roboto,Arial}
+  .wrap{max-width:960px;margin:36px auto;padding:0 16px}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand img{width:28px;filter:invert(1)}
+  a{color:#cfd6f5;text-decoration:none}
+  .grid{display:grid;gap:16px;grid-template-columns:1fr 1fr}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .tile h3{margin:0 0 6px}
+  .tile p{color:var(--muted);margin:0 0 12px}
+  .btn{display:inline-block;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:#1b1d24;color:#fff}
+  .muted{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <img src="/assets/logo-tt.png" alt="TT"><b>TransTime — DEMO</b>
+    </div>
+    <nav>
+      <a href="/">Главная</a>
+      <span class="muted" style="margin:0 8px">•</span>
+      <a href="/app/" id="adminLink">Панель</a>
+    </nav>
+  </header>
+
+  <h1 style="margin:8px 0 14px">Добро пожаловать в демо</h1>
+  <p class="muted" style="margin-bottom:18px">Вы в гостевом режиме. Доступны карта с маршрутами и калькулятор осевых нагрузок.</p>
+
+  <div class="grid">
+    <div class="tile">
+      <h3>Карта</h3>
+      <p>Монохромная карта РФ.</p>
+      <a class="btn" href="/map/">Открыть карту</a>
+    </div>
+    <div class="tile">
+      <h3>Калькулятор осей</h3>
+      <p>Расчёт нагрузок по осям для тягачей и цистерн с вашими макетами.</p>
+      <a class="btn" href="/calc/">Открыть калькулятор</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// если это гость — блокируем прямой вход в /app/
+if (localStorage.getItem('user') !== 'admin') {
+  document.getElementById('adminLink')?.addEventListener('click', e=>{
+    e.preventDefault();
+    alert('Панель доступна только администратору');
+  });
+}
+
+// если пришли не через кнопку, но роли нет — считаем гостем
+if (!localStorage.getItem('user')) localStorage.setItem('user','guest');
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[37.7, 55.8], [38.2, 55.9]]
+      },
+      "properties": {
+        "access": "hgv"
+      }
+    }
+  ]
+}
