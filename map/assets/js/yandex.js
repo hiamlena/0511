@@ -12,7 +12,7 @@ export function init() {
   window.__TT_YA_LOADING__ = true;
 
   const script = document.createElement('script');
-  script.src = `https://api-maps.yandex.ru/2.1/?apikey=${encodeURIComponent(cfg.apiKey)}&lang=${encodeURIComponent(cfg.lang || 'ru_RU')}&load=package.standard,package.search,package.multiRouter,package.geoObjects`;
+  script.src = `https://api-maps.yandex.ru/2.1/?apikey=${encodeURIComponent(cfg.apiKey)}&lang=${encodeURIComponent(cfg.lang || 'ru_RU')}&load=package.standard,package.search,multiRouter.MultiRoute,package.geoObjects`;
   script.onload = () => (window.ymaps ? ymaps.ready(setup) : toast('Yandex API не инициализировался'));
   script.onerror = () => toast('Не удалось загрузить Yandex Maps');
   document.head.appendChild(script);
