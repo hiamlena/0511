@@ -1,9 +1,12 @@
-import { $, toast, fmtDist, fmtTime, escapeHtml } from './core.js';
+import { $, toast, escapeHtml } from './core.js';
 import { YandexRouter } from './router.js';
 
 let map, multiRoute, viaPoints = [], objectManager;
-const pointCache = { from: null, to: null };
-let routeEventLinks = [];
+let cleanupRoute = () => {};
+const selectedPoints = { from: null, to: null };
+const suggestContext = {};
+let routeListEl, routeItemsEl;
+let globalClickBound = false;
 
 export function init() {
   const cfg = window.TRANSTIME_CONFIG?.yandex;
@@ -32,17 +35,17 @@ function setup() {
   const to = $('#to');
   const buildBtn = $('#buildBtn');
   const clearVia = $('#clearVia');
-  const routeList = $('#routeList');
-  const suggestMap = {
-    from: { input: from, box: $('#fromSuggest'), timer: 0, last: '' },
-    to: { input: to, box: $('#toSuggest'), timer: 0, last: '' }
-  };
+  routeListEl = $('#routeList');
+  routeItemsEl = $('#routeItems');
 
   // Добавление via-точек кликом
   map.events.add('click', (e) => {
     viaPoints.push(e.get('coords'));
     toast(`Добавлена via-точка (${viaPoints.length})`, 2000);
   });
+
+  attachSuggest('from');
+  attachSuggest('to');
 
   if (buildBtn) buildBtn.addEventListener('click', onBuild);
   if (clearVia) clearVia.addEventListener('click', () => {
@@ -68,23 +71,16 @@ function setup() {
       const toVal = to?.value?.trim();
       if (!fromVal || !toVal) throw new Error('Укажи адреса Откуда и Куда');
 
-      const A = await resolvePoint('from', fromVal);
-      const B = await resolvePoint('to', toVal);
+      let A = getStoredCoords('from', fromVal);
+      let B = getStoredCoords('to', toVal);
+      if (!A) A = await YandexRouter.geocode(fromVal);
+      if (!B) B = await YandexRouter.geocode(toVal);
+      selectedPoints.from = { value: fromVal, coords: A };
+      selectedPoints.to = { value: toVal, coords: B };
       const points = [A, ...viaPoints, B];
 
-      const { multiRoute: mr } = await YandexRouter.build(points, opts);
-      if (multiRoute) {
-        detachRouteEvents();
-        map.geoObjects.remove(multiRoute);
-      }
-      multiRoute = mr;
-      map.geoObjects.add(multiRoute);
-      attachRouteEvents();
-      multiRoute.editor.start({
-        addWayPoints: true,
-        removeWayPoints: true,
-        dragUpdatePolicy: 'recalculateRoute'
-      });
+      const { multiRoute: mr, routes } = await YandexRouter.build(points, opts);
+      applyMultiRoute(mr, routes);
       toast('Маршрут построен', 2000);
     } catch (e) {
       toast(typeof e === 'string' ? e : (e.message || 'Ошибка маршрута'));
@@ -268,6 +264,215 @@ function setup() {
       });
     });
   }
+}
+
+function attachSuggest(id) {
+  const input = document.getElementById(id);
+  const box = document.querySelector(`.suggestions[data-for="${id}"]`);
+  if (!input || !box || !ymaps?.suggest) return;
+
+  suggestContext[id] = { input, box, requestId: 0 };
+
+  input.addEventListener('input', () => {
+    const ctx = suggestContext[id];
+    if (!ctx) return;
+    ctx.requestId += 1;
+    const currentId = ctx.requestId;
+    const q = input.value.trim();
+    selectedPoints[id] = null;
+    if (q.length < 3) return hideSuggestions(id);
+    ymaps.suggest(q, { results: 5, boundedBy: map?.getBounds?.() }).then((items = []) => {
+      if (currentId !== ctx.requestId) return;
+      renderSuggestions(id, items);
+    }).catch(() => hideSuggestions(id));
+  });
+
+  input.addEventListener('focus', () => {
+    const ctx = suggestContext[id];
+    if (!ctx) return;
+    if (ctx.box.childElementCount) ctx.box.classList.add('show');
+  });
+
+  if (!globalClickBound) {
+    document.addEventListener('click', (evt) => {
+      if (!evt.target.closest('.field')) hideSuggestions();
+    });
+    globalClickBound = true;
+  }
+}
+
+function renderSuggestions(id, items) {
+  const ctx = suggestContext[id];
+  if (!ctx) return;
+  const { box, input } = ctx;
+  box.innerHTML = '';
+  if (!items.length) return hideSuggestions(id);
+  items.forEach((item, index) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'suggestion';
+    btn.role = 'option';
+    btn.dataset.index = String(index);
+    btn.textContent = item.displayName || item.value;
+    btn.addEventListener('click', async () => {
+      input.value = item.value;
+      hideSuggestions(id);
+      try {
+        const coords = await YandexRouter.geocode(item.value);
+        selectedPoints[id] = { value: item.value, coords };
+      } catch (err) {
+        console.error(err);
+        toast('Не удалось определить координаты адреса');
+      }
+    });
+    box.appendChild(btn);
+  });
+  box.classList.add('show');
+}
+
+function hideSuggestions(id) {
+  if (id) {
+    const ctx = suggestContext[id];
+    if (ctx) ctx.box.classList.remove('show');
+    if (ctx) ctx.box.innerHTML = '';
+    return;
+  }
+  Object.values(suggestContext).forEach(ctx => {
+    ctx.box.classList.remove('show');
+    ctx.box.innerHTML = '';
+  });
+}
+
+function getStoredCoords(id, value) {
+  const entry = selectedPoints[id];
+  if (entry && entry.value === value && Array.isArray(entry.coords)) return entry.coords;
+  return null;
+}
+
+function applyMultiRoute(mr, routes) {
+  if (!mr) return;
+  cleanupRoute?.();
+  if (multiRoute) {
+    try { multiRoute.editor.stop(); } catch (e) {}
+    if (map && multiRoute) map.geoObjects.remove(multiRoute);
+  }
+  multiRoute = mr;
+  map.geoObjects.add(multiRoute);
+
+  const onRequest = () => {
+    renderRouteList();
+    syncViaPointsFromRoute();
+  };
+  const onActiveChange = () => renderRouteList();
+
+  mr.model.events.add('requestsuccess', onRequest);
+  mr.events.add('activeroutechange', onActiveChange);
+  cleanupRoute = () => {
+    mr.model.events.remove('requestsuccess', onRequest);
+    mr.events.remove('activeroutechange', onActiveChange);
+  };
+
+  renderRouteList(routes);
+  syncViaPointsFromRoute();
+
+  try {
+    mr.editor.start({
+      addWayPoints: true,
+      removeWayPoints: true,
+      dragUpdatePolicy: 'recalculateRoute'
+    });
+  } catch (e) {
+    console.warn('Не удалось запустить редактор маршрута', e);
+  }
+}
+
+function renderRouteList(collection) {
+  if (!routeListEl || !routeItemsEl) return;
+  const routes = collection || multiRoute?.getRoutes?.();
+  if (!routes || routes.getLength?.() === 0) {
+    routeItemsEl.innerHTML = '';
+    routeListEl.classList.remove('show');
+    return;
+  }
+
+  const active = multiRoute?.getActiveRoute?.();
+  const items = [];
+  if (typeof routes.each === 'function') {
+    routes.each((route) => {
+      items.push({ route, idx: items.length });
+    });
+  } else if (typeof routes.getLength === 'function' && typeof routes.get === 'function') {
+    const len = routes.getLength();
+    for (let i = 0; i < len; i += 1) {
+      const route = routes.get(i);
+      if (route) items.push({ route, idx: i });
+    }
+  } else if (Array.isArray(routes)) {
+    routes.forEach((route, idx) => {
+      if (route) items.push({ route, idx });
+    });
+  }
+
+  if (!items.length) {
+    routeItemsEl.innerHTML = '';
+    routeListEl.classList.remove('show');
+    return;
+  }
+
+  routeItemsEl.innerHTML = '';
+  items.forEach(({ route, idx }) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'routeItem';
+    if (active === route) btn.classList.add('active');
+
+    const title = document.createElement('div');
+    title.className = 'routeTitle';
+    title.textContent = `Вариант ${idx + 1}`;
+
+    const meta = document.createElement('div');
+    meta.className = 'routeMeta';
+    const length = route.getHumanLength?.() || '';
+    const time = route.getHumanTime?.() || '';
+    meta.textContent = [length, time].filter(Boolean).join(' • ');
+
+    btn.appendChild(title);
+    btn.appendChild(meta);
+
+    btn.addEventListener('click', () => {
+      if (!multiRoute) return;
+      try {
+        multiRoute.setActiveRoute(route);
+      } catch (e) {
+        console.warn('Не удалось активировать маршрут', e);
+      }
+      renderRouteList();
+    });
+
+    routeItemsEl.appendChild(btn);
+  });
+
+  routeListEl.classList.add('show');
+}
+
+function syncViaPointsFromRoute() {
+  if (!multiRoute?.model) return;
+  const refs = multiRoute.model.getReferencePoints?.();
+  if (!Array.isArray(refs) || refs.length < 2) return;
+  const pts = refs
+    .map(toCoords)
+    .filter(Boolean);
+  if (pts.length >= 2) {
+    viaPoints = pts.slice(1, -1);
+  }
+}
+
+function toCoords(point) {
+  if (!point) return null;
+  if (Array.isArray(point)) return point;
+  if (point.coordinates && Array.isArray(point.coordinates)) return point.coordinates;
+  if (point.geometry?.coordinates && Array.isArray(point.geometry.coordinates)) return point.geometry.coordinates;
+  return null;
 }
 
 async function loadFrames() {

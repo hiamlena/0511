@@ -25,17 +25,13 @@
 
         <div class="field">
           <label class="field-label" for="from">Откуда</label>
-          <div class="inputWrap">
-            <input id="from" type="text" placeholder="Адрес, населённый пункт" autocomplete="off" aria-autocomplete="list" aria-controls="fromSuggest" aria-expanded="false">
-            <div id="fromSuggest" class="suggestions" role="listbox"></div>
-          </div>
+          <input id="from" type="text" placeholder="Адрес, населённый пункт" autocomplete="off" spellcheck="false">
+          <div class="suggestions" data-for="from" role="listbox" aria-label="Подсказки адреса"></div>
         </div>
         <div class="field">
           <label class="field-label" for="to">Куда</label>
-          <div class="inputWrap">
-            <input id="to" type="text" placeholder="Адрес, населённый пункт" autocomplete="off" aria-autocomplete="list" aria-controls="toSuggest" aria-expanded="false">
-            <div id="toSuggest" class="suggestions" role="listbox"></div>
-          </div>
+          <input id="to" type="text" placeholder="Адрес, населённый пункт" autocomplete="off" spellcheck="false">
+          <div class="suggestions" data-for="to" role="listbox" aria-label="Подсказки адреса"></div>
         </div>
 
         <div class="row2">
@@ -63,7 +59,10 @@
         <div class="dot dot-alt"></div><span class="small">Альтернативы</span>
         <div class="dot dot-frames"></div><span class="small">Весовые рамки</span>
       </div>
-      <div id="routeList" class="routeList" role="listbox" aria-label="Варианты маршрута"></div>
+      <div id="routeList" class="routeList" aria-live="polite">
+        <div class="routeList-title">Варианты маршрута</div>
+        <div id="routeItems" class="routeItems"></div>
+      </div>
     </div>
   </div>
 
