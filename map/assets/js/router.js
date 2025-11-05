@@ -19,9 +19,9 @@ export class YandexRouter {
     }
 
     const params = {
-      results: opts.alternatives ?? 3,
+      results: Number(opts.results ?? opts.alternatives ?? 3) || 3,
       routingMode: opts.mode ?? 'truck',
-      avoidTrafficJams: true
+      avoidTrafficJams: opts.avoidTrafficJams ?? true
     };
 
     if (opts.weight || opts.axleCount || opts.dimensions) {
@@ -43,7 +43,11 @@ export class YandexRouter {
           wayPointStartIconFillColor: '#22c55e',
           wayPointFinishIconFillColor: '#ef4444',
           viaPointIconFillColor: '#60a5fa',
-          boundsAutoApply: true
+          boundsAutoApply: true,
+          routeActiveStrokeColor: '#22c55e',
+          routeActiveStrokeWidth: 6,
+          routeStrokeColor: '#f59e0b',
+          routeStrokeWidth: 4
         }
       );
       mr.model.events.once('requestsuccess', () => {
