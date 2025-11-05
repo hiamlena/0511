@@ -21,7 +21,7 @@ export class YandexRouter {
     const params = {
       results: opts.results ?? opts.alternatives ?? 3,
       routingMode: opts.mode ?? 'truck',
-      avoidTrafficJams: true
+      avoidTrafficJams: opts.avoidTrafficJams ?? true
     };
 
     if (opts.weight || opts.axleCount || opts.dimensions) {
