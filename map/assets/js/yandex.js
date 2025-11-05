@@ -1,7 +1,9 @@
-import { $, $$, toast, fmtDist, fmtTime, escapeHtml } from './core.js';
+import { $, toast, fmtDist, fmtTime, escapeHtml } from './core.js';
 import { YandexRouter } from './router.js';
 
 let map, multiRoute, viaPoints = [], objectManager;
+const pointCache = { from: null, to: null };
+let routeEventLinks = [];
 
 export function init() {
   const cfg = window.TRANSTIME_CONFIG?.yandex;
@@ -12,7 +14,7 @@ export function init() {
   window.__TT_YA_LOADING__ = true;
 
   const script = document.createElement('script');
-  script.src = `https://api-maps.yandex.ru/2.1/?apikey=${encodeURIComponent(cfg.apiKey)}&lang=${encodeURIComponent(cfg.lang || 'ru_RU')}&load=package.standard,package.search,multiRouter.MultiRoute,package.geoObjects`;
+  script.src = `https://api-maps.yandex.ru/2.1/?apikey=${encodeURIComponent(cfg.apiKey)}&lang=${encodeURIComponent(cfg.lang || 'ru_RU')}&load=package.standard,package.search,package.suggest,multiRouter.MultiRoute,package.geoObjects`;
   script.onload = () => (window.ymaps ? ymaps.ready(setup) : toast('Yandex API не инициализировался'));
   script.onerror = () => toast('Не удалось загрузить Yandex Maps');
   document.head.appendChild(script);
@@ -30,7 +32,11 @@ function setup() {
   const to = $('#to');
   const buildBtn = $('#buildBtn');
   const clearVia = $('#clearVia');
-  const vehRadios = $$('input[name=veh]');
+  const routeList = $('#routeList');
+  const suggestMap = {
+    from: { input: from, box: $('#fromSuggest'), timer: 0, last: '' },
+    to: { input: to, box: $('#toSuggest'), timer: 0, last: '' }
+  };
 
   // Добавление via-точек кликом
   map.events.add('click', (e) => {
@@ -39,7 +45,13 @@ function setup() {
   });
 
   if (buildBtn) buildBtn.addEventListener('click', onBuild);
-  if (clearVia) clearVia.addEventListener('click', () => { viaPoints = []; toast('Via-точки очищены', 1500); });
+  if (clearVia) clearVia.addEventListener('click', () => {
+    viaPoints = [];
+    toast('Via-точки очищены', 1500);
+  });
+
+  setupSuggest('from');
+  setupSuggest('to');
 
   // Подгружаем рамки (тихо, без падения страницы)
   loadFrames().catch(()=>{});
@@ -56,18 +68,205 @@ function setup() {
       const toVal = to?.value?.trim();
       if (!fromVal || !toVal) throw new Error('Укажи адреса Откуда и Куда');
 
-      const A = await YandexRouter.geocode(fromVal);
-      const B = await YandexRouter.geocode(toVal);
+      const A = await resolvePoint('from', fromVal);
+      const B = await resolvePoint('to', toVal);
       const points = [A, ...viaPoints, B];
 
       const { multiRoute: mr } = await YandexRouter.build(points, opts);
-      if (multiRoute) map.geoObjects.remove(multiRoute);
+      if (multiRoute) {
+        detachRouteEvents();
+        map.geoObjects.remove(multiRoute);
+      }
       multiRoute = mr;
       map.geoObjects.add(multiRoute);
+      attachRouteEvents();
+      multiRoute.editor.start({
+        addWayPoints: true,
+        removeWayPoints: true,
+        dragUpdatePolicy: 'recalculateRoute'
+      });
       toast('Маршрут построен', 2000);
     } catch (e) {
       toast(typeof e === 'string' ? e : (e.message || 'Ошибка маршрута'));
     }
+  }
+
+  function setupSuggest(key) {
+    const state = suggestMap[key];
+    if (!state?.input || !state.box) return;
+
+    const { input, box } = state;
+
+    const request = async (val) => {
+      state.last = val;
+      try {
+        const items = await ymaps.suggest(val, { results: 6 });
+        if (state.last !== val) return;
+        renderSuggest(key, items);
+      } catch (err) {
+        console.error('suggest error', err);
+      }
+    };
+
+    input.addEventListener('input', () => {
+      pointCache[key] = null;
+      const val = input.value.trim();
+      if (!val) return hideSuggest(key);
+      clearTimeout(state.timer);
+      state.timer = window.setTimeout(() => request(val), 220);
+    });
+
+    input.addEventListener('focus', () => {
+      const val = input.value.trim();
+      if (val) request(val);
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') hideSuggest(key);
+    });
+
+    input.addEventListener('blur', () => {
+      window.setTimeout(() => hideSuggest(key), 150);
+    });
+
+    box.addEventListener('mousedown', (e) => {
+      const btn = e.target.closest('.suggestItem');
+      if (!btn) return;
+      e.preventDefault();
+      const value = btn.getAttribute('data-value');
+      if (value) chooseSuggest(key, value);
+    });
+  }
+
+  function renderSuggest(key, items = []) {
+    const state = suggestMap[key];
+    if (!state?.box || !state.input) return;
+
+    const box = state.box;
+    if (!Array.isArray(items) || !items.length) {
+      hideSuggest(key);
+      return;
+    }
+
+    box.innerHTML = items
+      .map((item, idx) => {
+        const label = escapeHtml(item.displayName || item.value || '');
+        const value = escapeHtml(item.value || '');
+        return `<button type="button" class="suggestItem" role="option" data-index="${idx}" data-value="${value}">${label}</button>`;
+      })
+      .join('');
+    box.classList.add('show');
+    state.input.setAttribute('aria-expanded', 'true');
+  }
+
+  function hideSuggest(key) {
+    const state = suggestMap[key];
+    if (!state?.box || !state.input) return;
+    state.box.classList.remove('show');
+    state.input.setAttribute('aria-expanded', 'false');
+  }
+
+  async function chooseSuggest(key, value) {
+    const state = suggestMap[key];
+    if (!state?.input) return;
+    state.input.value = value;
+    hideSuggest(key);
+    try {
+      const coords = await YandexRouter.geocode(value);
+      pointCache[key] = { value, coords };
+    } catch (err) {
+      toast(typeof err === 'string' ? err : 'Адрес не найден');
+    }
+  }
+
+  async function resolvePoint(key, value) {
+    const cached = pointCache[key];
+    if (cached && cached.value === value && Array.isArray(cached.coords)) return cached.coords;
+    const coords = await YandexRouter.geocode(value);
+    pointCache[key] = { value, coords };
+    return coords;
+  }
+
+  function attachRouteEvents() {
+    if (!multiRoute) return;
+    const handler = () => updateRouteList();
+    const handlerActive = () => updateRouteList();
+    multiRoute.model.events.add('requestsuccess', handler);
+    multiRoute.events.add('activeroutechange', handlerActive);
+    routeEventLinks = [
+      { target: multiRoute.model.events, type: 'requestsuccess', fn: handler },
+      { target: multiRoute.events, type: 'activeroutechange', fn: handlerActive }
+    ];
+    updateRouteList();
+  }
+
+  function detachRouteEvents() {
+    routeEventLinks.forEach(({ target, type, fn }) => {
+      target.remove(type, fn);
+    });
+    routeEventLinks = [];
+  }
+
+  function updateRouteList() {
+    if (!routeList) return;
+    if (!multiRoute) {
+      routeList.innerHTML = '';
+      routeList.style.display = 'none';
+      routeList.setAttribute('aria-hidden', 'true');
+      return;
+    }
+
+    const routes = multiRoute.getRoutes();
+    if (!routes || routes.getLength() === 0) {
+      routeList.innerHTML = '';
+      routeList.style.display = 'none';
+      routeList.setAttribute('aria-hidden', 'true');
+      return;
+    }
+
+    const wayPoints = multiRoute.getWayPoints?.();
+    if (wayPoints) {
+      const updated = [];
+      const total = wayPoints.getLength?.() ?? 0;
+      if (total >= 2) {
+        wayPoints.each((wp, idx) => {
+          if (idx > 0 && idx < total - 1 && wp?.geometry?.getCoordinates) {
+            updated.push(wp.geometry.getCoordinates());
+          }
+        });
+      }
+      viaPoints = updated;
+    }
+
+    const active = multiRoute.getActiveRoute();
+    const html = [];
+    routes.each((route, index) => {
+      const isActive = route === active;
+      const humanLength = typeof route.getHumanLength === 'function'
+        ? route.getHumanLength()
+        : fmtDist(route?.properties?.get('distance')?.value || 0);
+      const humanTime = typeof route.getHumanTime === 'function'
+        ? route.getHumanTime()
+        : fmtTime(route?.properties?.get('duration')?.value || 0);
+      html.push(
+        `<button type="button" class="routeItem${isActive ? ' active' : ''}" data-index="${index}" role="option" aria-selected="${isActive}">
+           <div class="routeTitle">Маршрут ${index + 1}</div>
+           <div class="small">${escapeHtml(humanLength)} • ${escapeHtml(humanTime)}</div>
+         </button>`
+      );
+    });
+
+    routeList.innerHTML = html.join('');
+    routeList.style.display = 'block';
+    routeList.setAttribute('aria-hidden', 'false');
+    routeList.querySelectorAll('.routeItem').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.index);
+        const routesCollection = multiRoute.getRoutes();
+        const route = routesCollection?.get(idx);
+        if (route) multiRoute.setActiveRoute(route);
+      });
+    });
   }
 }
 
